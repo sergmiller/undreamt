@@ -220,11 +220,11 @@ def main_train():
     if args.src is not None:
         f = open(args.src, encoding=args.encoding, errors='surrogateescape')
         corpus = data.CorpusReader(f, max_sentence_length=args.max_sentence_length, cache_size=args.cache)
-        src2src_trainer = Trainer(translator=src2src_translator, optimizers=src2src_optimizers, corpus=corpus, batch_size=args.batch)
+        src2src_trainer = Trainer(translator=src2src_translator, optimizers=src2src_optimizers, corpus=corpus, batch_size=args.batch, loss_mult=100)
         trainers.append(src2src_trainer)
         if not args.disable_backtranslation:
             trgback2src_trainer = Trainer(translator=trg2src_translator, optimizers=trg2src_optimizers,
-                                          corpus=data.BacktranslatorCorpusReader(corpus=corpus, translator=src2trg_translator), batch_size=args.batch)
+                                          corpus=data.BacktranslatorCorpusReader(corpus=corpus, translator=src2trg_translator), batch_size=args.batch, loss_mult=100)
             trainers.append(trgback2src_trainer)
     if args.trg is not None:
         f = open(args.trg, encoding=args.encoding, errors='surrogateescape')
@@ -312,12 +312,13 @@ def main_train():
 
 
 class Trainer:
-    def __init__(self, corpus, optimizers, translator, batch_size=50):
+    def __init__(self, corpus, optimizers, translator, batch_size=50, loss_mult=1):
         self.corpus = corpus
         self.translator = translator
         self.optimizers = optimizers
         self.batch_size = batch_size
         self.reset_stats()
+        self.loss_mult = loss_mult
 
     def step(self):
         # Reset gradients
@@ -334,7 +335,7 @@ class Trainer:
         # Compute loss
         t = time.time()
         loss = self.translator.score(src, trg, train=True)
-        self.loss += loss.data[0]
+        self.loss += (loss.data[0] * self.loss_mult)
         self.forward_time += time.time() - t
 
         # Backpropagate error + optimize
