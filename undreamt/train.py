@@ -220,20 +220,20 @@ def main_train():
     if args.src is not None:
         f = open(args.src, encoding=args.encoding, errors='surrogateescape')
         corpus = data.CorpusReader(f, max_sentence_length=args.max_sentence_length, cache_size=args.cache)
-        src2src_trainer = Trainer(translator=src2src_translator, optimizers=src2src_optimizers, corpus=corpus, batch_size=args.batch, loss_mult=100)
+        src2src_trainer = Trainer(translator=src2src_translator, optimizers=src2src_optimizers, corpus=corpus, batch_size=args.batch)
         trainers.append(src2src_trainer)
         if not args.disable_backtranslation:
             trgback2src_trainer = Trainer(translator=trg2src_translator, optimizers=trg2src_optimizers,
-                                          corpus=data.BacktranslatorCorpusReader(corpus=corpus, translator=src2trg_translator), batch_size=args.batch, loss_mult=100)
+                                          corpus=data.BacktranslatorCorpusReader(corpus=corpus, translator=src2trg_translator), batch_size=args.batch)
             trainers.append(trgback2src_trainer)
     if args.trg is not None:
         f = open(args.trg, encoding=args.encoding, errors='surrogateescape')
         corpus = data.CorpusReader(f, max_sentence_length=args.max_sentence_length, cache_size=args.cache)
-        trg2trg_trainer = Trainer(translator=trg2trg_translator, optimizers=trg2trg_optimizers, corpus=corpus, batch_size=args.batch)
+        trg2trg_trainer = Trainer(translator=trg2trg_translator, optimizers=trg2trg_optimizers, corpus=corpus, batch_size=args.batch, loss_mult=0.01)
         trainers.append(trg2trg_trainer)
         if not args.disable_backtranslation:
             srcback2trg_trainer = Trainer(translator=src2trg_translator, optimizers=src2trg_optimizers,
-                                          corpus=data.BacktranslatorCorpusReader(corpus=corpus, translator=trg2src_translator), batch_size=args.batch)
+                                          corpus=data.BacktranslatorCorpusReader(corpus=corpus, translator=trg2src_translator), batch_size=args.batch, loss_mult=0.01)
             trainers.append(srcback2trg_trainer)
     if args.src2trg is not None:
         f1 = open(args.src2trg[0], encoding=args.encoding, errors='surrogateescape')
